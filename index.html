@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#1a1726">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>WORDIT</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="top">
+    <h1 class="logo" aria-label="WORDIT">
+      <span>W</span><span>O</span><span>R</span><span>D</span><span>I</span><span>T</span>
+    </h1>
+    <button id="new-game" class="icon-btn" type="button" aria-label="New word">New</button>
+  </header>
+
+  <main>
+    <div id="board" class="board" role="grid" aria-label="Guesses"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </main>
+
+  <section id="result" class="result" hidden>
+    <p id="result-title" class="result-title"></p>
+    <p id="result-word" class="result-word"></p>
+    <button id="next-word" class="primary-btn" type="button">Next word</button>
+  </section>
+
+  <nav id="keyboard" class="keyboard" aria-label="Keyboard"></nav>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
