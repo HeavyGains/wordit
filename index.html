@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>WORDIT</title>
-  <link rel="stylesheet" href="css/style.css?v=mwn5yvnd">
+  <link rel="stylesheet" href="css/style.css?v=mwn6cgp9">
 </head>
 <body>
   <header class="top">
@@ -32,8 +32,10 @@
   <section id="result" class="result" hidden>
     <p id="result-title" class="result-title"></p>
     <p id="result-word" class="result-word"></p>
+    <p id="result-skill" class="result-skill"></p>
     <div class="result-btns">
       <button id="result-stats" class="icon-btn" type="button">Stats</button>
+      <button id="result-breakdown" class="icon-btn" type="button">Breakdown</button>
       <button id="next-word" class="primary-btn" type="button">Next word</button>
     </div>
   </section>
@@ -50,6 +52,8 @@
     <div class="sheet">
       <h2 id="stats-title"></h2>
       <div id="stats-nums" class="stats-nums"></div>
+      <h3>Guess skill</h3>
+      <div id="stats-skill" class="stats-skill"></div>
       <h3>Guesses to solve</h3>
       <div id="stats-dist" class="stats-dist"></div>
       <button id="recent-toggle" class="icon-btn recent-toggle" type="button" aria-expanded="false">Show recent words (spoilers)</button>
@@ -58,8 +62,22 @@
     </div>
   </div>
 
+  <div id="breakdown" class="overlay" hidden>
+    <div class="sheet">
+      <h2>How you did</h2>
+      <table class="breakdown">
+        <thead><tr><th>Guess</th><th>Words left</th><th>Skill</th></tr></thead>
+        <tbody id="breakdown-rows"></tbody>
+      </table>
+      <p class="hint">Words left: possible answers before and after each guess.
+        Skill: how well that guess could narrow things down, compared with the best
+        word you could have picked (100 = best possible). Luck doesn't count.</p>
+      <button id="breakdown-close" class="primary-btn" type="button">Close</button>
+    </div>
+  </div>
+
   <nav id="keyboard" class="keyboard" aria-label="Keyboard"></nav>
 
-  <script type="module" src="js/app.js?v=mwn5yvnd"></script>
+  <script type="module" src="js/app.js?v=mwn6cgp9"></script>
 </body>
 </html>

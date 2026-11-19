@@ -260,9 +260,11 @@ main {
 .subbar-right { display: flex; gap: 8px; }
 .subbar .icon-btn { padding: 4px 12px; font-size: 13px; }
 
+.result-skill { margin: -8px 0 12px; font-size: 15px; font-weight: 700; color: var(--muted); }
+.result-skill:empty { display: none; }
 .result-btns { display: flex; gap: 10px; justify-content: center; align-items: center; }
-.result-btns .primary-btn { width: auto; flex: 1; }
-.result-btns .icon-btn { padding: 12px 16px; font-size: 16px; }
+.result-btns .primary-btn { width: auto; flex: 1; white-space: nowrap; padding: 14px 12px; }
+.result-btns .icon-btn { padding: 12px 12px; font-size: 16px; }
 
 /* ---------- Overlays ---------- */
 
@@ -296,7 +298,7 @@ main {
 .picker-list { display: flex; flex-direction: column; gap: 12px; align-items: center; }
 .picker-btn.current { outline: 3px solid var(--text); outline-offset: 2px; }
 
-.stats-nums { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.stats-nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 4px; }
 .stat { display: flex; flex-direction: column; align-items: center; }
 .stat b { font-size: 24px; }
 .stat span { font-size: 11px; color: var(--muted); line-height: 1.2; }
@@ -327,3 +329,15 @@ main {
 
 .recent-toggle { margin: 18px 0 10px; }
 .stats-recent[hidden] { display: none; }
+
+/* ---------- Guess skill ---------- */
+
+.stats-skill { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.skill-row { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; color: var(--muted); }
+.skill-row b { color: var(--text); white-space: nowrap; }
+
+.breakdown { width: 100%; border-collapse: collapse; font-weight: 700; }
+.breakdown th { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; padding: 4px; }
+.breakdown td { padding: 8px 4px; border-top: 1px solid var(--line); }
+.breakdown .b-word { letter-spacing: 0.1em; }
+.breakdown .b-skill { color: var(--hit); }
