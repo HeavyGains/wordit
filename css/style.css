@@ -118,7 +118,7 @@ main {
 .tile.filled { border-color: var(--muted); }
 .tile.hit  { background: var(--hit);  border-color: var(--hit); }
 .tile.near { background: var(--near); border-color: var(--near); color: #2a1a05; }
-.tile.miss { background: #2a2639; border-color: #2a2639; color: #8d86a6; }
+.tile.miss { background: #1f1c2d; border-color: #1f1c2d; color: #4e4866; }
 
 .tile.pop  { animation: pop 0.12s ease-out; }
 .tile.flip { animation: flip 0.26s ease-in-out; }
@@ -233,7 +233,7 @@ main {
 .key:active { filter: brightness(1.25); }
 .key.hit  { background: var(--hit); }
 .key.near { background: var(--near); color: #2a1a05; }
-.key.miss { background: #221e31; color: #4f4866; }
+.key.miss { background: #1c1929; color: #353048; }
 
 /* Short screens (small phones, landscape) */
 @media (max-height: 640px) {
