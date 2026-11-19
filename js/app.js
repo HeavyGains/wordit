@@ -1,8 +1,8 @@
-import { WORD_LENGTH, MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js';
-import { ANSWERS } from './words.js';
-import { ALLOWED } from './allowed.js';
-import { PLAYERS, getPlayer, setPlayer, loadProfile, saveProfile } from './store.js';
-import { computeStats } from './stats.js';
+import { WORD_LENGTH, MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwn5th20';
+import { ANSWERS } from './words.js?v=mwn5th20';
+import { ALLOWED } from './allowed.js?v=mwn5th20';
+import { PLAYERS, getPlayer, setPlayer, loadProfile, saveProfile } from './store.js?v=mwn5th20';
+import { computeStats } from './stats.js?v=mwn5th20';
 
 const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '+ZXCVBNM-']; // + = Enter, - = Back
 const REVEAL_MS = 260; // delay between tiles flipping
