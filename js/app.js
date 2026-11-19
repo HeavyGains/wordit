@@ -1,9 +1,10 @@
-import { WORD_LENGTH, MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwn6cgp9';
-import { ANSWERS } from './words.js?v=mwn6cgp9';
-import { ALLOWED } from './allowed.js?v=mwn6cgp9';
-import { PLAYERS, getPlayer, setPlayer, loadProfile, saveProfile } from './store.js?v=mwn6cgp9';
-import { computeStats } from './stats.js?v=mwn6cgp9';
-import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwn6cgp9';
+import { WORD_LENGTH, MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwn6wm82';
+import { ANSWERS } from './words.js?v=mwn6wm82';
+import { ALLOWED } from './allowed.js?v=mwn6wm82';
+import { PLAYERS, getPlayer, setPlayer, loadProfile, saveProfile } from './store.js?v=mwn6wm82';
+import { computeStats } from './stats.js?v=mwn6wm82';
+import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwn6wm82';
+import { setupPWA } from './pwa.js?v=mwn6wm82';
 
 const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '+ZXCVBNM-']; // + = Enter, - = Back
 const REVEAL_MS = 260; // delay between tiles flipping
@@ -362,3 +363,4 @@ buildKeyboard();
 const saved = getPlayer();
 if (saved) startAs(saved);
 else { buildBoard(); showPicker(); }
+setupPWA();
