@@ -14,11 +14,15 @@
     <h1 class="logo" aria-label="WORDIT">
       <span>W</span><span>O</span><span>R</span><span>D</span><span>I</span><span>T</span>
     </h1>
-    <div class="top-right">
-      <span id="puzzle-no" class="puzzle-no"></span>
+    <button id="player-btn" class="icon-btn player-btn" type="button" aria-label="Switch player"></button>
+  </header>
+  <div class="subbar">
+    <span id="puzzle-no" class="puzzle-no"></span>
+    <div class="subbar-right">
+      <button id="stats-btn" class="icon-btn" type="button">Stats</button>
       <button id="new-game" class="icon-btn" type="button" aria-label="Skip to next word">Skip</button>
     </div>
-  </header>
+  </div>
 
   <main>
     <div id="board" class="board" role="grid" aria-label="Guesses"></div>
@@ -28,8 +32,31 @@
   <section id="result" class="result" hidden>
     <p id="result-title" class="result-title"></p>
     <p id="result-word" class="result-word"></p>
-    <button id="next-word" class="primary-btn" type="button">Next word</button>
+    <div class="result-btns">
+      <button id="result-stats" class="icon-btn" type="button">Stats</button>
+      <button id="next-word" class="primary-btn" type="button">Next word</button>
+    </div>
   </section>
+
+  <div id="picker" class="overlay" hidden>
+    <div class="sheet">
+      <h2>Who's playing?</h2>
+      <div id="picker-list" class="picker-list"></div>
+      <p class="hint">Each player keeps their own puzzles and stats on this phone.</p>
+    </div>
+  </div>
+
+  <div id="stats" class="overlay" hidden>
+    <div class="sheet">
+      <h2 id="stats-title"></h2>
+      <div id="stats-nums" class="stats-nums"></div>
+      <h3>Guesses to solve</h3>
+      <div id="stats-dist" class="stats-dist"></div>
+      <h3>Recent games</h3>
+      <ul id="stats-recent" class="stats-recent"></ul>
+      <button id="stats-close" class="primary-btn" type="button">Close</button>
+    </div>
+  </div>
 
   <nav id="keyboard" class="keyboard" aria-label="Keyboard"></nav>
 
