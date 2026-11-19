@@ -46,3 +46,8 @@ export function keyboardMarks(guesses, answer) {
 export function isWin(guess, answer) {
   return guess.toUpperCase() === answer.toUpperCase();
 }
+
+// Puzzle #1 is answers[0]. After the last word the list starts over.
+export function answerFor(puzzle, answers) {
+  return answers[(puzzle - 1) % answers.length];
+}

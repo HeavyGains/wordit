@@ -1,7 +1,9 @@
-import { WORD_LENGTH, MAX_GUESSES, scoreGuess, keyboardMarks, isWin } from './logic.js';
+import { WORD_LENGTH, MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js';
 import { ANSWERS } from './words.js';
+import { ALLOWED } from './allowed.js';
 
 const SAVE_KEY = 'wordit.current';
+const NEXT_KEY = 'wordit.nextPuzzle'; // next puzzle number to deal on this phone
 const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '+ZXCVBNM-']; // + = Enter, - = Back
 const REVEAL_MS = 260; // delay between tiles flipping
 
@@ -13,11 +15,12 @@ const resultEl = document.getElementById('result');
 let state = load() || newState();
 let busy = false; // true while a row is revealing
 
-function newState(prevAnswer) {
-  let answer;
-  do answer = ANSWERS[Math.floor(Math.random() * ANSWERS.length)];
-  while (ANSWERS.length > 1 && answer === prevAnswer);
-  return { answer, guesses: [], current: '', status: 'playing' };
+// Deal the next numbered puzzle. Everyone plays the same order (see words.js).
+function newState() {
+  let puzzle = 1;
+  try { puzzle = Math.max(1, parseInt(localStorage.getItem(NEXT_KEY), 10) || 1); } catch {}
+  try { localStorage.setItem(NEXT_KEY, String(puzzle + 1)); } catch {}
+  return { puzzle, answer: answerFor(puzzle, ANSWERS), guesses: [], current: '', status: 'playing' };
 }
 
 function save() {
@@ -27,7 +30,7 @@ function save() {
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem(SAVE_KEY));
-    if (s && typeof s.answer === 'string' && Array.isArray(s.guesses)) return s;
+    if (s && typeof s.puzzle === 'number' && typeof s.answer === 'string' && Array.isArray(s.guesses)) return s;
   } catch {}
   return null;
 }
@@ -81,6 +84,7 @@ function buildKeyboard() {
 // ---------- Drawing state ----------
 
 function render() {
+  document.getElementById('puzzle-no').textContent = `#${state.puzzle}`;
   const rows = boardEl.children;
   for (let r = 0; r < MAX_GUESSES; r++) {
     const tiles = rows[r].children;
@@ -164,6 +168,11 @@ function submit() {
     return;
   }
   const guess = state.current;
+  if (!ALLOWED.has(guess)) {
+    shakeRow();
+    toast('Not in word list');
+    return;
+  }
   const rowIndex = state.guesses.length;
   state.guesses.push(guess);
   state.current = '';
@@ -194,7 +203,7 @@ function revealRow(rowIndex, guess) {
 }
 
 function nextWord() {
-  state = newState(state.answer);
+  state = newState();
   save();
   buildBoard();
   render();
