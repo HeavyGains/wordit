@@ -240,3 +240,6 @@ main {
   :root { --tile: min(11vw, 6.2dvh); }
   .key { height: 46px; }
 }
+
+.top-right { display: flex; align-items: center; gap: 10px; }
+.puzzle-no { font-weight: 800; color: var(--muted); font-size: 15px; }
