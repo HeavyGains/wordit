@@ -1,9 +1,9 @@
 import { WORD_LENGTH, MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js';
 import { ANSWERS } from './words.js';
 import { ALLOWED } from './allowed.js';
+import { PLAYERS, getPlayer, setPlayer, loadProfile, saveProfile } from './store.js';
+import { computeStats } from './stats.js';
 
-const SAVE_KEY = 'wordit.current';
-const NEXT_KEY = 'wordit.nextPuzzle'; // next puzzle number to deal on this phone
 const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '+ZXCVBNM-']; // + = Enter, - = Back
 const REVEAL_MS = 260; // delay between tiles flipping
 
@@ -11,28 +11,49 @@ const boardEl = document.getElementById('board');
 const keyboardEl = document.getElementById('keyboard');
 const toastEl = document.getElementById('toast');
 const resultEl = document.getElementById('result');
+const pickerEl = document.getElementById('picker');
+const statsEl = document.getElementById('stats');
 
-let state = load() || newState();
-let busy = false; // true while a row is revealing
+let player = null;   // 'Jason' | 'Amy'
+let profile = null;  // { next, current, history }
+let state = null;    // profile.current: the game on screen
+let busy = false;    // true while a row is revealing
 
-// Deal the next numbered puzzle. Everyone plays the same order (see words.js).
-function newState() {
-  let puzzle = 1;
-  try { puzzle = Math.max(1, parseInt(localStorage.getItem(NEXT_KEY), 10) || 1); } catch {}
-  try { localStorage.setItem(NEXT_KEY, String(puzzle + 1)); } catch {}
+// Deal the player's next numbered puzzle. Everyone plays the same order (see words.js).
+function dealPuzzle() {
+  const puzzle = profile.next;
+  profile.next = puzzle + 1;
   return { puzzle, answer: answerFor(puzzle, ANSWERS), guesses: [], current: '', status: 'playing' };
 }
 
 function save() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch {}
+  profile.current = state;
+  saveProfile(player, profile);
 }
 
-function load() {
-  try {
-    const s = JSON.parse(localStorage.getItem(SAVE_KEY));
-    if (s && typeof s.puzzle === 'number' && typeof s.answer === 'string' && Array.isArray(s.guesses)) return s;
-  } catch {}
-  return null;
+// Add a finished game to the player's history (once per puzzle).
+function record(skipped = false) {
+  if (profile.history.some((g) => g.puzzle === state.puzzle)) return;
+  profile.history.push({
+    puzzle: state.puzzle,
+    answer: state.answer,
+    guesses: [...state.guesses],
+    won: state.status === 'won',
+    ...(skipped ? { skipped: true } : {}),
+    at: Date.now(),
+  });
+}
+
+function startAs(name) {
+  player = name;
+  setPlayer(name);
+  profile = loadProfile(name);
+  state = profile.current || dealPuzzle();
+  save();
+  document.getElementById('player-btn').textContent = name;
+  pickerEl.hidden = true;
+  buildBoard();
+  render();
 }
 
 // ---------- Building the page ----------
@@ -84,6 +105,7 @@ function buildKeyboard() {
 // ---------- Drawing state ----------
 
 function render() {
+  if (!state) return;
   document.getElementById('puzzle-no').textContent = `#${state.puzzle}`;
   const rows = boardEl.children;
   for (let r = 0; r < MAX_GUESSES; r++) {
@@ -139,6 +161,7 @@ function shakeRow() {
 // ---------- Input ----------
 
 function press(key) {
+  if (!pickerEl.hidden || !statsEl.hidden) return;
   if (busy || state.status !== 'playing') return;
   if (key === 'Enter') return submit();
   if (key === 'Backspace') {
@@ -178,6 +201,7 @@ function submit() {
   state.current = '';
   if (isWin(guess, state.answer)) state.status = 'won';
   else if (state.guesses.length >= MAX_GUESSES) state.status = 'lost';
+  if (state.status !== 'playing') record();
   save();
   revealRow(rowIndex, guess);
 }
@@ -203,7 +227,7 @@ function revealRow(rowIndex, guess) {
 }
 
 function nextWord() {
-  state = newState();
+  state = dealPuzzle();
   save();
   buildBoard();
   render();
@@ -225,12 +249,77 @@ document.addEventListener('keydown', (e) => {
 
 document.getElementById('next-word').addEventListener('click', nextWord);
 document.getElementById('new-game').addEventListener('click', () => {
+  if (busy) return;
   if (state.status === 'playing' && state.guesses.length > 0) {
+    // A skip after guessing counts as a loss, so stats stay honest.
+    state.status = 'lost';
+    record(true);
     toast(`Skipped: it was ${state.answer}`);
   }
   nextWord();
 });
 
-buildBoard();
+// ---------- Player picker ----------
+
+function showPicker() {
+  const list = document.getElementById('picker-list');
+  list.innerHTML = '';
+  for (const name of PLAYERS) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'primary-btn picker-btn' + (name === player ? ' current' : '');
+    b.textContent = name;
+    b.addEventListener('click', () => startAs(name));
+    list.appendChild(b);
+  }
+  pickerEl.hidden = false;
+}
+
+document.getElementById('player-btn').addEventListener('click', () => { if (!busy) showPicker(); });
+
+// ---------- Stats ----------
+
+function showStats() {
+  const s = computeStats(profile.history);
+  document.getElementById('stats-title').textContent = `${player}'s stats`;
+  const nums = [
+    [s.played, 'Played'],
+    [s.winPct + '%', 'Won'],
+    [s.currentStreak, 'Streak'],
+    [s.maxStreak, 'Best streak'],
+    [s.avgGuesses ?? '-', 'Avg guesses'],
+  ];
+  document.getElementById('stats-nums').innerHTML = nums
+    .map(([v, l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+
+  const last = profile.history[profile.history.length - 1];
+  const lastBar = last && last.won ? last.guesses.length - 1 : -1;
+  const max = Math.max(1, ...s.dist);
+  document.getElementById('stats-dist').innerHTML = s.dist.map((n, i) => `
+    <div class="bar-row">
+      <span class="bar-label">${i + 1}</span>
+      <span class="bar${i === lastBar ? ' last' : ''}" style="width:${Math.max(8, (n / max) * 100)}%">${n}</span>
+    </div>`).join('') + `
+    <div class="bar-row"><span class="bar-label">X</span>
+      <span class="bar lost" style="width:${Math.max(8, ((s.played - s.wins) / max) * 100)}%">${s.played - s.wins}</span>
+    </div>`;
+
+  const recent = profile.history.slice(-10).reverse();
+  document.getElementById('stats-recent').innerHTML = recent.length
+    ? recent.map((g) => `
+      <li><span class="r-no">#${g.puzzle}</span><span class="r-word">${g.answer}</span>
+      <span class="r-res ${g.won ? 'win' : 'loss'}">${g.won ? g.guesses.length + '/' + MAX_GUESSES : g.skipped ? 'skip' : 'X'}</span></li>`).join('')
+    : '<li class="empty">No games yet. Go play!</li>';
+  statsEl.hidden = false;
+}
+
+document.getElementById('stats-btn').addEventListener('click', () => { if (!busy) showStats(); });
+document.getElementById('result-stats').addEventListener('click', showStats);
+document.getElementById('stats-close').addEventListener('click', () => { statsEl.hidden = true; });
+
+// ---------- Start ----------
+
 buildKeyboard();
-render();
+const saved = getPlayer();
+if (saved) startAs(saved);
+else { buildBoard(); showPicker(); }
