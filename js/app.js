@@ -1,8 +1,8 @@
-import { WORD_LENGTH, MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwn5th20';
-import { ANSWERS } from './words.js?v=mwn5th20';
-import { ALLOWED } from './allowed.js?v=mwn5th20';
-import { PLAYERS, getPlayer, setPlayer, loadProfile, saveProfile } from './store.js?v=mwn5th20';
-import { computeStats } from './stats.js?v=mwn5th20';
+import { WORD_LENGTH, MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwn5yvnd';
+import { ANSWERS } from './words.js?v=mwn5yvnd';
+import { ALLOWED } from './allowed.js?v=mwn5yvnd';
+import { PLAYERS, getPlayer, setPlayer, loadProfile, saveProfile } from './store.js?v=mwn5yvnd';
+import { computeStats } from './stats.js?v=mwn5yvnd';
 
 const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '+ZXCVBNM-']; // + = Enter, - = Back
 const REVEAL_MS = 260; // delay between tiles flipping
@@ -310,11 +310,21 @@ function showStats() {
       <li><span class="r-no">#${g.puzzle}</span><span class="r-word">${g.answer}</span>
       <span class="r-res ${g.won ? 'win' : 'loss'}">${g.won ? g.guesses.length + '/' + MAX_GUESSES : g.skipped ? 'skip' : 'X'}</span></li>`).join('')
     : '<li class="empty">No games yet. Go play!</li>';
+  setRecentOpen(false); // always start hidden so the screen can be shown without spoilers
   statsEl.hidden = false;
 }
 
 document.getElementById('stats-btn').addEventListener('click', () => { if (!busy) showStats(); });
 document.getElementById('result-stats').addEventListener('click', showStats);
+function setRecentOpen(open) {
+  const btn = document.getElementById('recent-toggle');
+  document.getElementById('stats-recent').hidden = !open;
+  btn.setAttribute('aria-expanded', String(open));
+  btn.textContent = open ? 'Hide recent words' : 'Show recent words (spoilers)';
+}
+document.getElementById('recent-toggle').addEventListener('click', () => {
+  setRecentOpen(document.getElementById('stats-recent').hidden);
+});
 document.getElementById('stats-close').addEventListener('click', () => { statsEl.hidden = true; });
 
 // ---------- Start ----------

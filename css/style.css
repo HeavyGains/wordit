@@ -324,3 +324,6 @@ main {
 .stats-recent .win { color: var(--hit); }
 .stats-recent .loss { color: var(--accent); }
 .stats-recent .empty { color: var(--muted); justify-content: center; border: 0; }
+
+.recent-toggle { margin: 18px 0 10px; }
+.stats-recent[hidden] { display: none; }
