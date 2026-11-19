@@ -1,8 +1,9 @@
-import { WORD_LENGTH, MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwn5yvnd';
-import { ANSWERS } from './words.js?v=mwn5yvnd';
-import { ALLOWED } from './allowed.js?v=mwn5yvnd';
-import { PLAYERS, getPlayer, setPlayer, loadProfile, saveProfile } from './store.js?v=mwn5yvnd';
-import { computeStats } from './stats.js?v=mwn5yvnd';
+import { WORD_LENGTH, MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwn6cgp9';
+import { ANSWERS } from './words.js?v=mwn6cgp9';
+import { ALLOWED } from './allowed.js?v=mwn6cgp9';
+import { PLAYERS, getPlayer, setPlayer, loadProfile, saveProfile } from './store.js?v=mwn6cgp9';
+import { computeStats } from './stats.js?v=mwn6cgp9';
+import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwn6cgp9';
 
 const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '+ZXCVBNM-']; // + = Enter, - = Back
 const REVEAL_MS = 260; // delay between tiles flipping
@@ -13,6 +14,7 @@ const toastEl = document.getElementById('toast');
 const resultEl = document.getElementById('result');
 const pickerEl = document.getElementById('picker');
 const statsEl = document.getElementById('stats');
+const breakdownEl = document.getElementById('breakdown');
 
 let player = null;   // 'Jason' | 'Amy'
 let profile = null;  // { next, current, history }
@@ -139,6 +141,10 @@ function showResult() {
     ? `Got it in ${state.guesses.length}!`
     : 'Out of guesses';
   document.getElementById('result-word').textContent = state.answer;
+  const skill = gameSkill(analyzeGame(state.guesses, state.answer, ANSWERS));
+  const avg = qualityStats(profile.history, ANSWERS).avgSkill;
+  document.getElementById('result-skill').textContent =
+    skill === null ? '' : `Skill ${skill}` + (avg === null ? '' : ` \u00b7 your average ${avg}`);
   resultEl.hidden = false;
   keyboardEl.hidden = true;
 }
@@ -161,7 +167,7 @@ function shakeRow() {
 // ---------- Input ----------
 
 function press(key) {
-  if (!pickerEl.hidden || !statsEl.hidden) return;
+  if (!pickerEl.hidden || !statsEl.hidden || !breakdownEl.hidden) return;
   if (busy || state.status !== 'playing') return;
   if (key === 'Enter') return submit();
   if (key === 'Backspace') {
@@ -259,6 +265,20 @@ document.getElementById('new-game').addEventListener('click', () => {
   nextWord();
 });
 
+// ---------- Guess breakdown ----------
+
+function showBreakdown() {
+  const rows = analyzeGame(state.guesses, state.answer, ANSWERS);
+  document.getElementById('breakdown-rows').innerHTML = rows.map((r) => `
+    <tr><td class="b-word">${r.guess}</td>
+      <td>${r.before} &rarr; ${r.after}</td>
+      <td class="b-skill">${r.free ? '&ndash;' : r.skill}</td></tr>`).join('');
+  breakdownEl.hidden = false;
+}
+
+document.getElementById('result-breakdown').addEventListener('click', showBreakdown);
+document.getElementById('breakdown-close').addEventListener('click', () => { breakdownEl.hidden = true; });
+
 // ---------- Player picker ----------
 
 function showPicker() {
@@ -289,6 +309,15 @@ function showStats() {
     [s.maxStreak, 'Best streak'],
     [s.avgGuesses ?? '-', 'Avg guesses'],
   ];
+  const q = qualityStats(profile.history, ANSWERS);
+  nums.push([q.avgSkill ?? '-', 'Avg skill']);
+  const fmt = (v) => (v === null ? '-' : v);
+  document.getElementById('stats-skill').innerHTML = `
+    <div class="skill-row"><span>Last game</span><b>${fmt(q.lastSkill)}</b></div>
+    <div class="skill-row"><span>Last 10 games</span><b>${fmt(q.recentSkill)}</b></div>
+    <div class="skill-row"><span>All games</span><b>${fmt(q.avgSkill)}</b></div>
+    <div class="skill-row"><span>Words left after guess 1/2/3</span>
+      <b>${q.leftAfter.map(fmt).join(' / ')}</b></div>`;
   document.getElementById('stats-nums').innerHTML = nums
     .map(([v, l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
 
