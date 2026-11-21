@@ -1,12 +1,12 @@
-import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwqljb81';
-import { ANSWERS } from './words.js?v=mwqljb81';
-import { ALLOWED } from './allowed.js?v=mwqljb81';
-import { ANSWERS5 } from './words5.js?v=mwqljb81';
-import { ALLOWED5 } from './allowed5.js?v=mwqljb81';
-import { PLAYERS, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mwqljb81';
-import { computeStats } from './stats.js?v=mwqljb81';
-import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwqljb81';
-import { setupPWA } from './pwa.js?v=mwqljb81';
+import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwqq38j4';
+import { ANSWERS } from './words.js?v=mwqq38j4';
+import { ALLOWED } from './allowed.js?v=mwqq38j4';
+import { ANSWERS5 } from './words5.js?v=mwqq38j4';
+import { ALLOWED5 } from './allowed5.js?v=mwqq38j4';
+import { PLAYERS, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mwqq38j4';
+import { computeStats } from './stats.js?v=mwqq38j4';
+import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwqq38j4';
+import { setupPWA } from './pwa.js?v=mwqq38j4';
 
 const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '+ZXCVBNM-']; // + = Enter, - = Back
 const REVEAL_MS = 260; // delay between tiles flipping
