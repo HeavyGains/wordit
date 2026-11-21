@@ -1,10 +1,12 @@
-import { WORD_LENGTH, MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwn6wm82';
-import { ANSWERS } from './words.js?v=mwn6wm82';
-import { ALLOWED } from './allowed.js?v=mwn6wm82';
-import { PLAYERS, getPlayer, setPlayer, loadProfile, saveProfile } from './store.js?v=mwn6wm82';
-import { computeStats } from './stats.js?v=mwn6wm82';
-import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwn6wm82';
-import { setupPWA } from './pwa.js?v=mwn6wm82';
+import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwqljb81';
+import { ANSWERS } from './words.js?v=mwqljb81';
+import { ALLOWED } from './allowed.js?v=mwqljb81';
+import { ANSWERS5 } from './words5.js?v=mwqljb81';
+import { ALLOWED5 } from './allowed5.js?v=mwqljb81';
+import { PLAYERS, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mwqljb81';
+import { computeStats } from './stats.js?v=mwqljb81';
+import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwqljb81';
+import { setupPWA } from './pwa.js?v=mwqljb81';
 
 const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '+ZXCVBNM-']; // + = Enter, - = Back
 const REVEAL_MS = 260; // delay between tiles flipping
@@ -22,16 +24,24 @@ let profile = null;  // { next, current, history }
 let state = null;    // profile.current: the game on screen
 let busy = false;    // true while a row is revealing
 
+// Word-length modes. Each has its own answer order, puzzle numbers and stats.
+const MODES = {
+  6: { answers: ANSWERS, allowed: ALLOWED },
+  5: { answers: ANSWERS5, allowed: ALLOWED5 },
+};
+let len = 6;         // letters in the current mode
+const answers = () => MODES[len].answers;
+
 // Deal the player's next numbered puzzle. Everyone plays the same order (see words.js).
 function dealPuzzle() {
   const puzzle = profile.next;
   profile.next = puzzle + 1;
-  return { puzzle, answer: answerFor(puzzle, ANSWERS), guesses: [], current: '', status: 'playing' };
+  return { puzzle, answer: answerFor(puzzle, answers()), guesses: [], current: '', status: 'playing' };
 }
 
 function save() {
   profile.current = state;
-  saveProfile(player, profile);
+  saveProfile(player, profile, len);
 }
 
 // Add a finished game to the player's history (once per puzzle).
@@ -50,11 +60,21 @@ function record(skipped = false) {
 function startAs(name) {
   player = name;
   setPlayer(name);
-  profile = loadProfile(name);
-  state = profile.current || dealPuzzle();
-  save();
   document.getElementById('player-btn').textContent = name;
   pickerEl.hidden = true;
+  loadMode(getLength(name));
+}
+
+// Switch to 5 or 6 letters. A game in progress stays saved in its own mode.
+function loadMode(n) {
+  len = n;
+  setLength(player, n);
+  profile = loadProfile(player, n);
+  state = profile.current || dealPuzzle();
+  save();
+  const btn = document.getElementById('mode-btn');
+  btn.textContent = `${n} letters`;
+  btn.setAttribute('aria-label', `Playing ${n} letters. Switch to ${n === 6 ? 5 : 6} letters`);
   buildBoard();
   render();
 }
@@ -63,11 +83,12 @@ function startAs(name) {
 
 function buildBoard() {
   boardEl.innerHTML = '';
+  boardEl.style.setProperty('--cols', len);
   for (let r = 0; r < MAX_GUESSES; r++) {
     const row = document.createElement('div');
     row.className = 'row';
     row.setAttribute('role', 'row');
-    for (let c = 0; c < WORD_LENGTH; c++) {
+    for (let c = 0; c < len; c++) {
       const tile = document.createElement('div');
       tile.className = 'tile';
       tile.setAttribute('role', 'gridcell');
@@ -116,7 +137,7 @@ function render() {
     const guess = state.guesses[r];
     const marks = guess ? scoreGuess(guess, state.answer) : null;
     const text = guess || (r === state.guesses.length ? state.current : '');
-    for (let c = 0; c < WORD_LENGTH; c++) {
+    for (let c = 0; c < len; c++) {
       const tile = tiles[c];
       tile.textContent = text[c] || '';
       tile.className = 'tile' + (text[c] ? ' filled' : '') + (marks ? ' ' + marks[c] : '');
@@ -142,8 +163,8 @@ function showResult() {
     ? `Got it in ${state.guesses.length}!`
     : 'Out of guesses';
   document.getElementById('result-word').textContent = state.answer;
-  const skill = gameSkill(analyzeGame(state.guesses, state.answer, ANSWERS));
-  const avg = qualityStats(profile.history, ANSWERS).avgSkill;
+  const skill = gameSkill(analyzeGame(state.guesses, state.answer, answers()));
+  const avg = qualityStats(profile.history, answers()).avgSkill;
   document.getElementById('result-skill').textContent =
     skill === null ? '' : `Skill ${skill}` + (avg === null ? '' : ` \u00b7 your average ${avg}`);
   resultEl.hidden = false;
@@ -173,7 +194,7 @@ function press(key) {
   if (key === 'Enter') return submit();
   if (key === 'Backspace') {
     state.current = state.current.slice(0, -1);
-  } else if (/^[A-Z]$/.test(key) && state.current.length < WORD_LENGTH) {
+  } else if (/^[A-Z]$/.test(key) && state.current.length < len) {
     state.current += key;
   } else {
     return;
@@ -192,13 +213,13 @@ function popTile() {
 }
 
 function submit() {
-  if (state.current.length < WORD_LENGTH) {
+  if (state.current.length < len) {
     shakeRow();
-    toast('Need 6 letters');
+    toast(`Need ${len} letters`);
     return;
   }
   const guess = state.current;
-  if (!ALLOWED.has(guess)) {
+  if (!MODES[len].allowed.has(guess)) {
     shakeRow();
     toast('Not in word list');
     return;
@@ -230,7 +251,7 @@ function revealRow(rowIndex, guess) {
       boardEl.children[rowIndex].classList.add('win');
       toast(['Genius!', 'Brilliant!', 'Superb!', 'Great!', 'Nice!', 'Solid!', 'Phew!'][rowIndex] || 'Nice!');
     }
-  }, WORD_LENGTH * REVEAL_MS + 150);
+  }, len * REVEAL_MS + 150);
 }
 
 function nextWord() {
@@ -269,7 +290,7 @@ document.getElementById('new-game').addEventListener('click', () => {
 // ---------- Guess breakdown ----------
 
 function showBreakdown() {
-  const rows = analyzeGame(state.guesses, state.answer, ANSWERS);
+  const rows = analyzeGame(state.guesses, state.answer, answers());
   document.getElementById('breakdown-rows').innerHTML = rows.map((r) => `
     <tr><td class="b-word">${r.guess}</td>
       <td>${r.before} &rarr; ${r.after}</td>
@@ -296,13 +317,19 @@ function showPicker() {
   pickerEl.hidden = false;
 }
 
+document.getElementById('mode-btn').addEventListener('click', () => {
+  if (busy || !player) return;
+  loadMode(len === 6 ? 5 : 6);
+  toast(`${len} letters`);
+});
+
 document.getElementById('player-btn').addEventListener('click', () => { if (!busy) showPicker(); });
 
 // ---------- Stats ----------
 
 function showStats() {
   const s = computeStats(profile.history);
-  document.getElementById('stats-title').textContent = `${player}'s stats`;
+  document.getElementById('stats-title').textContent = `${player}'s stats \u00b7 ${len} letters`;
   const nums = [
     [s.played, 'Played'],
     [s.winPct + '%', 'Won'],
@@ -310,7 +337,7 @@ function showStats() {
     [s.maxStreak, 'Best streak'],
     [s.avgGuesses ?? '-', 'Avg guesses'],
   ];
-  const q = qualityStats(profile.history, ANSWERS);
+  const q = qualityStats(profile.history, answers());
   nums.push([q.avgSkill ?? '-', 'Avg skill']);
   const fmt = (v) => (v === null ? '-' : v);
   document.getElementById('stats-skill').innerHTML = `

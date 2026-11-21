@@ -3,7 +3,11 @@
 export const PLAYERS = ['Jason', 'Amy'];
 
 const PLAYER_KEY = 'wordit.player';
-const profileKey = (name) => `wordit.profile.${name}`;
+// 6-letter saves keep their original key; other lengths get their own, so
+// stats and puzzle numbers stay separate per mode.
+const profileKey = (name, len = 6) => (len === 6 ? `wordit.profile.${name}` : `wordit.profile${len}.${name}`);
+const modeKey = (name) => `wordit.len.${name}`;
+export const LENGTHS = [6, 5];
 // Keys used before players existed (PR 1/2); moved to the first player picked.
 const OLD_CURRENT = 'wordit.current';
 const OLD_NEXT = 'wordit.nextPuzzle';
@@ -31,16 +35,26 @@ export function setPlayer(name) {
   set(PLAYER_KEY, name);
 }
 
-export function loadProfile(name) {
-  try {
-    const p = JSON.parse(get(profileKey(name)));
-    if (p && typeof p.next === 'number' && Array.isArray(p.history)) return p;
-  } catch {}
-  return migrateOld() || emptyProfile();
+// Word length each player last played (6 unless they switched).
+export function getLength(name) {
+  const n = parseInt(get(modeKey(name)), 10);
+  return LENGTHS.includes(n) ? n : 6;
 }
 
-export function saveProfile(name, profile) {
-  set(profileKey(name), JSON.stringify(profile));
+export function setLength(name, len) {
+  set(modeKey(name), String(len));
+}
+
+export function loadProfile(name, len = 6) {
+  try {
+    const p = JSON.parse(get(profileKey(name, len)));
+    if (p && typeof p.next === 'number' && Array.isArray(p.history)) return p;
+  } catch {}
+  return (len === 6 && migrateOld()) || emptyProfile();
+}
+
+export function saveProfile(name, profile, len = 6) {
+  set(profileKey(name, len), JSON.stringify(profile));
 }
 
 // One-time: carry a game in progress from before players existed.

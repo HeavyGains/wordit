@@ -5,7 +5,7 @@
 // words still possible at that point. It uses the *expected* number of words
 // left (averaged over every answer still possible), so it rates the choice,
 // not luck. 100 = as good as the best possible word, 0 = narrowed nothing.
-import { scoreGuess } from './logic.js?v=mwn6wm82';
+import { scoreGuess } from './logic.js?v=mwqljb81';
 
 // Feedback pattern as a short string, e.g. "hnmmhn".
 const pattern = (guess, answer) => scoreGuess(guess, answer).map((m) => m[0]).join('');
@@ -33,9 +33,10 @@ export function bestExpected(pool) {
 }
 
 // The first guess always faces the whole answer list. Its best score is slow to
-// work out (SATIRE, for the 1,588-word list), so it's stored here by list size.
+// work out (SATIRE for the 1,588 6-letter answers, RAISE for the 1,296 5-letter
+// answers), so it's stored here by list size.
 // If words are appended, the phone works it out once from a sample instead.
-const firstBest = new Map([[1588, 19.27455919395466]]);
+const firstBest = new Map([[1588, 19.27455919395466], [1296, 30.621913580246915]]);
 function bestFor(pool, isFirst) {
   if (!isFirst) return bestExpected(pool);
   if (!firstBest.has(pool.length)) firstBest.set(pool.length, bestExpected(pool));

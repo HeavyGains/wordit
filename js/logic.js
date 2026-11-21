@@ -1,6 +1,6 @@
 // Pure game rules. No DOM here, so it can be unit tested in Node.
 
-export const WORD_LENGTH = 6;
+export const WORD_LENGTH = 6; // default; 5-letter mode is chosen in the game
 export const MAX_GUESSES = 7;
 
 // Marks for each letter of a guess:
