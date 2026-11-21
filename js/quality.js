@@ -5,7 +5,7 @@
 // words still possible at that point. It uses the *expected* number of words
 // left (averaged over every answer still possible), so it rates the choice,
 // not luck. 100 = as good as the best possible word, 0 = narrowed nothing.
-import { scoreGuess } from './logic.js?v=mwqljb81';
+import { scoreGuess } from './logic.js?v=mwqq38j4';
 
 // Feedback pattern as a short string, e.g. "hnmmhn".
 const pattern = (guess, answer) => scoreGuess(guess, answer).map((m) => m[0]).join('');
