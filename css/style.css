@@ -98,7 +98,7 @@ main {
 
 .row {
   display: grid;
-  grid-template-columns: repeat(6, var(--tile));
+  grid-template-columns: repeat(var(--cols, 6), var(--tile));
   gap: var(--gap);
 }
 
