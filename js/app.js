@@ -1,12 +1,13 @@
-import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwqq38j4';
-import { ANSWERS } from './words.js?v=mwqq38j4';
-import { ALLOWED } from './allowed.js?v=mwqq38j4';
-import { ANSWERS5 } from './words5.js?v=mwqq38j4';
-import { ALLOWED5 } from './allowed5.js?v=mwqq38j4';
-import { PLAYERS, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mwqq38j4';
-import { computeStats } from './stats.js?v=mwqq38j4';
-import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwqq38j4';
-import { setupPWA } from './pwa.js?v=mwqq38j4';
+import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwqqiun3';
+import { ANSWERS } from './words.js?v=mwqqiun3';
+import { ALLOWED } from './allowed.js?v=mwqqiun3';
+import { ANSWERS5 } from './words5.js?v=mwqqiun3';
+import { ALLOWED5 } from './allowed5.js?v=mwqqiun3';
+import { PLAYERS, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mwqqiun3';
+import { computeStats } from './stats.js?v=mwqqiun3';
+import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwqqiun3';
+import { nextNumber, saveForLater, resume, saved as savedGames } from './puzzles.js?v=mwqqiun3';
+import { setupPWA } from './pwa.js?v=mwqqiun3';
 
 const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '+ZXCVBNM-']; // + = Enter, - = Back
 const REVEAL_MS = 260; // delay between tiles flipping
@@ -16,6 +17,8 @@ const keyboardEl = document.getElementById('keyboard');
 const toastEl = document.getElementById('toast');
 const resultEl = document.getElementById('result');
 const pickerEl = document.getElementById('picker');
+const skipEl = document.getElementById('skip');
+const gotoEl = document.getElementById('goto');
 const statsEl = document.getElementById('stats');
 const breakdownEl = document.getElementById('breakdown');
 
@@ -33,9 +36,14 @@ let len = 6;         // letters in the current mode
 const answers = () => MODES[len].answers;
 
 // Deal the player's next numbered puzzle. Everyone plays the same order (see words.js).
+// Puzzles finished or saved for later are stepped over.
 function dealPuzzle() {
-  const puzzle = profile.next;
+  const puzzle = nextNumber(profile);
   profile.next = puzzle + 1;
+  return newGame(puzzle);
+}
+
+function newGame(puzzle) {
   return { puzzle, answer: answerFor(puzzle, answers()), guesses: [], current: '', status: 'playing' };
 }
 
@@ -161,7 +169,7 @@ function showResult() {
   const won = state.status === 'won';
   document.getElementById('result-title').textContent = won
     ? `Got it in ${state.guesses.length}!`
-    : 'Out of guesses';
+    : state.skipped ? `#${state.puzzle} was` : 'Out of guesses';
   document.getElementById('result-word').textContent = state.answer;
   const skill = gameSkill(analyzeGame(state.guesses, state.answer, answers()));
   const avg = qualityStats(profile.history, answers()).avgSkill;
@@ -189,7 +197,7 @@ function shakeRow() {
 // ---------- Input ----------
 
 function press(key) {
-  if (!pickerEl.hidden || !statsEl.hidden || !breakdownEl.hidden) return;
+  if ([pickerEl, statsEl, breakdownEl, skipEl, gotoEl].some((el) => !el.hidden)) return;
   if (busy || state.status !== 'playing') return;
   if (key === 'Enter') return submit();
   if (key === 'Backspace') {
@@ -278,14 +286,86 @@ document.addEventListener('keydown', (e) => {
 document.getElementById('next-word').addEventListener('click', nextWord);
 document.getElementById('new-game').addEventListener('click', () => {
   if (busy) return;
-  if (state.status === 'playing' && state.guesses.length > 0) {
-    // A skip after guessing counts as a loss, so stats stay honest.
-    state.status = 'lost';
-    record(true);
-    toast(`Skipped: it was ${state.answer}`);
-  }
-  nextWord();
+  if (state.status !== 'playing') return nextWord();
+  document.getElementById('skip-title').textContent = `Skip #${state.puzzle}?`;
+  skipEl.hidden = false;
 });
+
+// ---------- Skip: save for later or show the word ----------
+
+document.getElementById('skip-later').addEventListener('click', () => {
+  skipEl.hidden = true;
+  const n = state.puzzle;
+  saveForLater(profile, state);
+  nextWord();
+  toast(`#${n} saved for later`);
+});
+
+document.getElementById('skip-show').addEventListener('click', () => {
+  skipEl.hidden = true;
+  // Seeing the word counts as a loss, so stats stay honest.
+  state.status = 'lost';
+  state.skipped = true;
+  record(true);
+  save();
+  render();
+});
+
+document.getElementById('skip-cancel').addEventListener('click', () => { skipEl.hidden = true; });
+
+// ---------- Go to a puzzle number ----------
+
+function showGoto() {
+  const max = answers().length;
+  const input = document.getElementById('goto-input');
+  input.value = '';
+  input.max = max;
+  document.getElementById('goto-hint').textContent = `${len}-letter puzzles go from 1 to ${max}.`;
+  const list = savedGames(profile);
+  document.getElementById('goto-saved-head').hidden = !list.length;
+  document.getElementById('goto-saved').innerHTML = list.map((g) =>
+    `<button type="button" class="icon-btn" data-n="${g.puzzle}">#${g.puzzle}${g.guesses.length ? ` \u00b7 ${g.guesses.length} tried` : ''}</button>`).join('');
+  gotoEl.hidden = false;
+}
+
+function goTo(n) {
+  if (!Number.isInteger(n) || n < 1 || n > answers().length) {
+    toast(`Pick 1 to ${answers().length}`);
+    return;
+  }
+  if (n === state.puzzle) { gotoEl.hidden = true; return; }
+  const done = profile.history.find((g) => g.puzzle === n);
+  if (done) {
+    toast(`You already finished #${n}` + (done.won ? ` in ${done.guesses.length}` : ''));
+    return;
+  }
+  gotoEl.hidden = true;
+  let left = null;
+  if (state.status === 'playing' && !state.guesses.length && state.puzzle === profile.next - 1) {
+    profile.next = state.puzzle; // untouched: it simply comes up next again
+  } else if (state.status === 'playing') {
+    left = state.puzzle;
+    saveForLater(profile, state); // the game you leave is kept, not lost
+  }
+  state = resume(profile, n) || newGame(n);
+  save();
+  buildBoard();
+  render();
+  if (left) toast(`#${left} saved for later`);
+}
+
+document.getElementById('puzzle-no').addEventListener('click', () => { if (!busy) showGoto(); });
+document.getElementById('goto-go').addEventListener('click', () => {
+  goTo(parseInt(document.getElementById('goto-input').value, 10));
+});
+document.getElementById('goto-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); goTo(parseInt(e.target.value, 10)); }
+});
+document.getElementById('goto-saved').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-n]');
+  if (b) goTo(Number(b.dataset.n));
+});
+document.getElementById('goto-close').addEventListener('click', () => { gotoEl.hidden = true; });
 
 // ---------- Guess breakdown ----------
 

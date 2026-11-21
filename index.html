@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="css/style.css?v=mwqq38j4">
+  <link rel="stylesheet" href="css/style.css?v=mwqqiun3">
 </head>
 <body>
   <header class="top">
@@ -22,11 +22,11 @@
     <button id="player-btn" class="icon-btn player-btn" type="button" aria-label="Switch player"></button>
   </header>
   <div class="subbar">
-    <span id="puzzle-no" class="puzzle-no"></span>
+    <button id="puzzle-no" class="puzzle-no" type="button" aria-label="Go to a puzzle number"></button>
     <div class="subbar-right">
       <button id="mode-btn" class="icon-btn" type="button">6 letters</button>
       <button id="stats-btn" class="icon-btn" type="button">Stats</button>
-      <button id="new-game" class="icon-btn" type="button" aria-label="Skip to next word">Skip</button>
+      <button id="new-game" class="icon-btn" type="button" aria-label="Skip this word">Skip</button>
     </div>
   </div>
 
@@ -68,6 +68,30 @@
     </div>
   </div>
 
+  <div id="skip" class="overlay" hidden>
+    <div class="sheet sheet-btns">
+      <h2 id="skip-title">Skip?</h2>
+      <button id="skip-later" class="primary-btn" type="button">Save for later</button>
+      <button id="skip-show" class="icon-btn" type="button">Show the word (counts as a loss)</button>
+      <button id="skip-cancel" class="icon-btn" type="button">Keep playing</button>
+      <p class="hint">Saved words keep your guesses. Tap the puzzle number at the top left to come back to them.</p>
+    </div>
+  </div>
+
+  <div id="goto" class="overlay" hidden>
+    <div class="sheet sheet-btns">
+      <h2>Go to a puzzle</h2>
+      <div class="goto-row">
+        <input id="goto-input" class="goto-input" type="number" inputmode="numeric" min="1" placeholder="#" aria-label="Puzzle number">
+        <button id="goto-go" class="primary-btn" type="button">Go</button>
+      </div>
+      <p id="goto-hint" class="hint"></p>
+      <h3 id="goto-saved-head" hidden>Saved for later</h3>
+      <div id="goto-saved" class="goto-saved"></div>
+      <button id="goto-close" class="icon-btn" type="button">Close</button>
+    </div>
+  </div>
+
   <div id="breakdown" class="overlay" hidden>
     <div class="sheet">
       <h2>How you did</h2>
@@ -84,6 +108,6 @@
 
   <nav id="keyboard" class="keyboard" aria-label="Keyboard"></nav>
 
-  <script type="module" src="js/app.js?v=mwqq38j4"></script>
+  <script type="module" src="js/app.js?v=mwqqiun3"></script>
 </body>
 </html>
