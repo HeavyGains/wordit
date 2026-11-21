@@ -245,7 +245,23 @@ main {
 }
 
 .top-right { display: flex; align-items: center; gap: 10px; }
-.puzzle-no { font-weight: 800; color: var(--muted); font-size: 15px; }
+.puzzle-no {
+  font: inherit; font-weight: 800; color: var(--muted); font-size: 15px;
+  background: none; border: 0; padding: 4px 6px 4px 0; cursor: pointer;
+}
+.puzzle-no::after { content: ' \25BE'; }
+
+.sheet-btns { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.sheet-btns h2, .sheet-btns h3 { margin-bottom: 4px; }
+.sheet-btns .hint { margin: 0; }
+.goto-row { display: flex; gap: 10px; width: 100%; max-width: 320px; }
+.goto-row .primary-btn { width: auto; padding: 12px 22px; }
+.goto-input {
+  flex: 1; min-width: 0; font: inherit; font-size: 22px; font-weight: 800; text-align: center;
+  color: var(--text); background: var(--bg); border: 2px solid var(--line); border-radius: 14px;
+  user-select: text; -webkit-user-select: text;
+}
+.goto-saved { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 
 /* ---------- Player, sub bar ---------- */
 
