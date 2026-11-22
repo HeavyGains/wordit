@@ -1,13 +1,13 @@
-import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwqqiun3';
-import { ANSWERS } from './words.js?v=mwqqiun3';
-import { ALLOWED } from './allowed.js?v=mwqqiun3';
-import { ANSWERS5 } from './words5.js?v=mwqqiun3';
-import { ALLOWED5 } from './allowed5.js?v=mwqqiun3';
-import { PLAYERS, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mwqqiun3';
-import { computeStats } from './stats.js?v=mwqqiun3';
-import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwqqiun3';
-import { nextNumber, saveForLater, resume, saved as savedGames } from './puzzles.js?v=mwqqiun3';
-import { setupPWA } from './pwa.js?v=mwqqiun3';
+import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mws02o84';
+import { ANSWERS } from './words.js?v=mws02o84';
+import { ALLOWED } from './allowed.js?v=mws02o84';
+import { ANSWERS5 } from './words5.js?v=mws02o84';
+import { ALLOWED5 } from './allowed5.js?v=mws02o84';
+import { PLAYERS, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mws02o84';
+import { computeStats } from './stats.js?v=mws02o84';
+import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mws02o84';
+import { nextNumber, saveForLater, resume, saved as savedGames } from './puzzles.js?v=mws02o84';
+import { setupPWA } from './pwa.js?v=mws02o84';
 
 const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '+ZXCVBNM-']; // + = Enter, - = Back
 const REVEAL_MS = 260; // delay between tiles flipping
@@ -373,8 +373,8 @@ function showBreakdown() {
   const rows = analyzeGame(state.guesses, state.answer, answers());
   document.getElementById('breakdown-rows').innerHTML = rows.map((r) => `
     <tr><td class="b-word">${r.guess}</td>
-      <td>${r.before} &rarr; ${r.after}</td>
-      <td class="b-skill">${r.free ? '&ndash;' : r.skill}</td></tr>`).join('');
+      <td>${r.settled ? '<span class="b-note">already 1</span>' : `${r.before} &rarr; ${r.after}`}</td>
+      <td class="b-skill">${r.free || r.settled ? '&ndash;' : r.skill}</td></tr>`).join('');
   breakdownEl.hidden = false;
 }
 

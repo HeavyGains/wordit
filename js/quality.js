@@ -5,7 +5,7 @@
 // words still possible at that point. It uses the *expected* number of words
 // left (averaged over every answer still possible), so it rates the choice,
 // not luck. 100 = as good as the best possible word, 0 = narrowed nothing.
-import { scoreGuess } from './logic.js?v=mwqqiun3';
+import { scoreGuess } from './logic.js?v=mws02o84';
 
 // Feedback pattern as a short string, e.g. "hnmmhn".
 const pattern = (guess, answer) => scoreGuess(guess, answer).map((m) => m[0]).join('');
@@ -43,19 +43,22 @@ function bestFor(pool, isFirst) {
   return firstBest.get(pool.length);
 }
 
-// For each guess: { guess, before, after, skill, free }.
+// For each guess: { guess, before, after, skill, free, settled }.
 //   before/after = possible answers before and after the guess.
 //   free = only one word was left and you typed it: shown, but not averaged.
+//   settled = only one word was already left and you guessed something else.
+//     The answer list is hidden, so you couldn't know that. Not scored.
 export function analyzeGame(guesses, answer, answers) {
   let pool = answers;
   return guesses.map((guess, i) => {
     const before = pool.length;
     const p = pattern(guess, answer);
     const next = pool.filter((a) => pattern(guess, a) === p);
-    let skill, free = false;
+    let skill = null, free = false, settled = false;
     if (before <= 1) {
       free = guess.toUpperCase() === answer.toUpperCase();
-      skill = free ? 100 : 0;
+      settled = !free;
+      if (free) skill = 100;
     } else {
       const mine = expectedLeft(guess, pool);
       const best = bestFor(pool, i === 0);
@@ -64,7 +67,7 @@ export function analyzeGame(guesses, answer, answers) {
       skill = Math.round(Math.max(0, Math.min(100, skill)));
     }
     pool = next;
-    return { guess, before, after: next.length, skill, free };
+    return { guess, before, after: next.length, skill, free, settled };
   });
 }
 
@@ -72,7 +75,7 @@ const avg = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : nul
 
 // Average skill of one game's guesses (null if there was nothing to judge).
 export function gameSkill(rows) {
-  const a = avg(rows.filter((r) => !r.free).map((r) => r.skill));
+  const a = avg(rows.filter((r) => !r.free && !r.settled).map((r) => r.skill));
   return a === null ? null : Math.round(a);
 }
 

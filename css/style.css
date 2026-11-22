@@ -360,3 +360,4 @@ main {
 .breakdown td { padding: 8px 4px; border-top: 1px solid var(--line); }
 .breakdown .b-word { letter-spacing: 0.1em; }
 .breakdown .b-skill { color: var(--hit); }
+.breakdown .b-note { color: var(--muted); font-weight: 600; }
