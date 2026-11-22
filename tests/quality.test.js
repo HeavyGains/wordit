@@ -20,6 +20,16 @@ test('typing the only word left is free and not averaged', () => {
   assert.equal(gameSkill([last]), null);
 });
 
+test('guesses after the answer is pinned down are not scored', () => {
+  // GARDEN leaves only PLANET; MARKET and BASKET miss it, then PLANET is free.
+  const pool = ['PLANET', 'GARDEN', 'MARKET', 'BASKET'];
+  const rows = analyzeGame(['GARDEN', 'MARKET', 'BASKET', 'PLANET'], 'PLANET', pool);
+  assert.equal(rows[0].after, 1);
+  assert.deepEqual(rows.slice(1, 3).map((r) => [r.settled, r.skill]), [[true, null], [true, null]]);
+  assert.equal(rows[3].free, true);
+  assert.equal(gameSkill(rows), rows[0].skill);
+});
+
 test('the best word scores 100, a useless repeat scores 0', () => {
   const best = POOL.reduce((b, w) => (expectedLeft(w, POOL) < expectedLeft(b, POOL) ? w : b));
   assert.equal(analyzeGame([best], 'BASKET', POOL)[0].skill, 100);
