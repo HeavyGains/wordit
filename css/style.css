@@ -119,6 +119,9 @@ main {
 }
 
 .tile.filled { border-color: var(--muted); }
+.tile.editable { cursor: pointer; }
+/* Where the next letter goes: tap any tile in the row being typed to move it */
+.tile.cursor { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(233, 103, 123, 0.35); }
 .tile.hit  { background: var(--hit);  border-color: var(--hit); }
 .tile.near { background: var(--near); border-color: var(--near); color: #2a1a05; }
 .tile.miss { background: #221f30; border-color: #221f30; color: #5d5776; }
