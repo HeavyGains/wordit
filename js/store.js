@@ -1,8 +1,12 @@
 // Per-player saves in this browser's localStorage. Every read/write is
 // wrapped so private browsing or blocked storage just means no saving.
-export const PLAYERS = ['Jason', 'Amy'];
+// Players are whoever typed a name on this phone. Before names could be
+// typed, the game had two fixed players; they're kept if they have saves.
+const OLD_PLAYERS = ['Jason', 'Amy'];
+export const MAX_NAME = 16;
 
 const PLAYER_KEY = 'wordit.player';
+const PLAYERS_KEY = 'wordit.players';
 // 6-letter saves keep their original key; other lengths get their own, so
 // stats and puzzle numbers stay separate per mode.
 const profileKey = (name, len = 6) => (len === 6 ? `wordit.profile.${name}` : `wordit.profile${len}.${name}`);
@@ -26,9 +30,50 @@ export function emptyProfile() {
   return { next: 1, current: null, history: [] };
 }
 
+// Tidy a typed name: trim, squash spaces, cap the length. '' = not usable.
+export function cleanName(raw) {
+  return String(raw ?? '').replace(/\s+/g, ' ').trim().slice(0, MAX_NAME).trim();
+}
+
+// The same name typed with different capitals is the same player.
+export function findName(list, name) {
+  const key = name.toLowerCase();
+  return list.find((n) => n.toLowerCase() === key) || null;
+}
+
+// Old fixed players that already have something saved on this phone.
+export function oldPlayersWithSaves(has) {
+  const current = get(PLAYER_KEY);
+  return OLD_PLAYERS.filter((n) => n === current
+    || LENGTHS.some((l) => has(profileKey(n, l))) || has(modeKey(n)));
+}
+
+export function getPlayers() {
+  try {
+    const list = JSON.parse(get(PLAYERS_KEY));
+    if (Array.isArray(list)) return list.filter((n) => typeof n === 'string' && n);
+  } catch {}
+  const list = oldPlayersWithSaves((k) => get(k) !== null);
+  if (list.length) set(PLAYERS_KEY, JSON.stringify(list));
+  return list;
+}
+
+// Add a player (or find the one already using that name). Returns the name
+// to play as, or null if the typed name is empty.
+export function addPlayer(raw) {
+  const name = cleanName(raw);
+  if (!name) return null;
+  const list = getPlayers();
+  const existing = findName(list, name);
+  if (existing) return existing;
+  list.push(name);
+  set(PLAYERS_KEY, JSON.stringify(list));
+  return name;
+}
+
 export function getPlayer() {
   const p = get(PLAYER_KEY);
-  return PLAYERS.includes(p) ? p : null;
+  return getPlayers().includes(p) ? p : null;
 }
 
 export function setPlayer(name) {
