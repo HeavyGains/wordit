@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="css/style.css?v=mwsnsmcm">
+  <link rel="stylesheet" href="css/style.css?v=mwsr985p">
 </head>
 <body>
   <header class="top">
@@ -48,9 +48,16 @@
 
   <div id="picker" class="overlay" hidden>
     <div class="sheet">
-      <h2>Who's playing?</h2>
+      <h2 id="picker-title">Who's playing?</h2>
       <div id="picker-list" class="picker-list"></div>
+      <form id="name-form" class="goto-row name-row" autocomplete="off">
+        <input id="name-input" class="goto-input name-input" type="text" maxlength="16"
+          autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="go"
+          placeholder="Your name" aria-label="Your name">
+        <button id="name-go" class="primary-btn" type="submit">Play</button>
+      </form>
       <p class="hint">Each player keeps their own puzzles and stats on this phone.</p>
+      <button id="picker-close" class="icon-btn picker-close" type="button">Close</button>
     </div>
   </div>
 
@@ -108,6 +115,6 @@
 
   <nav id="keyboard" class="keyboard" aria-label="Keyboard"></nav>
 
-  <script type="module" src="js/app.js?v=mwsnsmcm"></script>
+  <script type="module" src="js/app.js?v=mwsr985p"></script>
 </body>
 </html>

@@ -1,14 +1,14 @@
-import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwsnsmcm';
-import { ANSWERS } from './words.js?v=mwsnsmcm';
-import { ALLOWED } from './allowed.js?v=mwsnsmcm';
-import { ANSWERS5 } from './words5.js?v=mwsnsmcm';
-import { ALLOWED5 } from './allowed5.js?v=mwsnsmcm';
-import { PLAYERS, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mwsnsmcm';
-import { computeStats } from './stats.js?v=mwsnsmcm';
-import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwsnsmcm';
-import { nextNumber, saveForLater, resume, saved as savedGames } from './puzzles.js?v=mwsnsmcm';
-import { firstEmpty, isComplete, typeLetter, backspace } from './edit.js?v=mwsnsmcm';
-import { setupPWA } from './pwa.js?v=mwsnsmcm';
+import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwsr985p';
+import { ANSWERS } from './words.js?v=mwsr985p';
+import { ALLOWED } from './allowed.js?v=mwsr985p';
+import { ANSWERS5 } from './words5.js?v=mwsr985p';
+import { ALLOWED5 } from './allowed5.js?v=mwsr985p';
+import { getPlayers, addPlayer, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mwsr985p';
+import { computeStats } from './stats.js?v=mwsr985p';
+import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwsr985p';
+import { nextNumber, saveForLater, resume, saved as savedGames } from './puzzles.js?v=mwsr985p';
+import { firstEmpty, isComplete, typeLetter, backspace } from './edit.js?v=mwsr985p';
+import { setupPWA } from './pwa.js?v=mwsr985p';
 
 const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '+ZXCVBNM-']; // + = Enter, - = Back
 const REVEAL_MS = 260; // delay between tiles flipping
@@ -23,7 +23,7 @@ const gotoEl = document.getElementById('goto');
 const statsEl = document.getElementById('stats');
 const breakdownEl = document.getElementById('breakdown');
 
-let player = null;   // 'Jason' | 'Amy'
+let player = null;   // name typed on the picker
 let profile = null;  // { next, current, history }
 let state = null;    // profile.current: the game on screen
 let cursor = null;   // spot in the current row where the next letter goes (null = first empty)
@@ -291,7 +291,10 @@ boardEl.addEventListener('click', (e) => {
   if (tile && tile.parentElement === boardEl.children[state.guesses.length]) moveCursor(Number(tile.dataset.col));
 });
 
+const typingInBox = (e) => e.target instanceof HTMLInputElement;
+
 document.addEventListener('keydown', (e) => {
+  if (typingInBox(e)) return;
   if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
     if (cursor === null) return;
     moveCursor(Math.max(0, Math.min(len - 1, cursor + (e.key === 'ArrowLeft' ? -1 : 1))));
@@ -304,7 +307,7 @@ keyboardEl.addEventListener('click', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.ctrlKey || e.metaKey || e.altKey || typingInBox(e)) return;
   if (e.key === 'Enter' || e.key === 'Backspace') {
     e.preventDefault(); // stop Enter from also clicking a focused button
     press(e.key);
@@ -414,9 +417,10 @@ document.getElementById('breakdown-close').addEventListener('click', () => { bre
 // ---------- Player picker ----------
 
 function showPicker() {
+  const players = getPlayers();
   const list = document.getElementById('picker-list');
   list.innerHTML = '';
-  for (const name of PLAYERS) {
+  for (const name of players) {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'primary-btn picker-btn' + (name === player ? ' current' : '');
@@ -424,8 +428,24 @@ function showPicker() {
     b.addEventListener('click', () => startAs(name));
     list.appendChild(b);
   }
+  list.hidden = !players.length;
+  document.getElementById('picker-title').textContent = players.length ? "Who's playing?" : "What's your name?";
+  document.getElementById('name-input').placeholder = players.length ? 'New player' : 'Your name';
+  document.getElementById('name-input').value = '';
+  document.getElementById('picker-close').hidden = !player;
   pickerEl.hidden = false;
+  if (!players.length) document.getElementById('name-input').focus();
 }
+
+document.getElementById('name-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = document.getElementById('name-input');
+  const name = addPlayer(input.value);
+  if (!name) { input.focus(); return; } // nothing typed yet
+  input.blur();
+  startAs(name);
+});
+document.getElementById('picker-close').addEventListener('click', () => { pickerEl.hidden = true; });
 
 document.getElementById('mode-btn').addEventListener('click', () => {
   if (busy || !player) return;
