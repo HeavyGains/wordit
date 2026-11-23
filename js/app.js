@@ -1,13 +1,14 @@
-import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mws02o84';
-import { ANSWERS } from './words.js?v=mws02o84';
-import { ALLOWED } from './allowed.js?v=mws02o84';
-import { ANSWERS5 } from './words5.js?v=mws02o84';
-import { ALLOWED5 } from './allowed5.js?v=mws02o84';
-import { PLAYERS, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mws02o84';
-import { computeStats } from './stats.js?v=mws02o84';
-import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mws02o84';
-import { nextNumber, saveForLater, resume, saved as savedGames } from './puzzles.js?v=mws02o84';
-import { setupPWA } from './pwa.js?v=mws02o84';
+import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwsnsmcm';
+import { ANSWERS } from './words.js?v=mwsnsmcm';
+import { ALLOWED } from './allowed.js?v=mwsnsmcm';
+import { ANSWERS5 } from './words5.js?v=mwsnsmcm';
+import { ALLOWED5 } from './allowed5.js?v=mwsnsmcm';
+import { PLAYERS, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mwsnsmcm';
+import { computeStats } from './stats.js?v=mwsnsmcm';
+import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwsnsmcm';
+import { nextNumber, saveForLater, resume, saved as savedGames } from './puzzles.js?v=mwsnsmcm';
+import { firstEmpty, isComplete, typeLetter, backspace } from './edit.js?v=mwsnsmcm';
+import { setupPWA } from './pwa.js?v=mwsnsmcm';
 
 const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '+ZXCVBNM-']; // + = Enter, - = Back
 const REVEAL_MS = 260; // delay between tiles flipping
@@ -25,6 +26,7 @@ const breakdownEl = document.getElementById('breakdown');
 let player = null;   // 'Jason' | 'Amy'
 let profile = null;  // { next, current, history }
 let state = null;    // profile.current: the game on screen
+let cursor = null;   // spot in the current row where the next letter goes (null = first empty)
 let busy = false;    // true while a row is revealing
 
 // Word-length modes. Each has its own answer order, puzzle numbers and stats.
@@ -79,6 +81,7 @@ function loadMode(n) {
   setLength(player, n);
   profile = loadProfile(player, n);
   state = profile.current || dealPuzzle();
+  cursor = null;
   save();
   const btn = document.getElementById('mode-btn');
   btn.textContent = `${n} letters`;
@@ -100,6 +103,7 @@ function buildBoard() {
       const tile = document.createElement('div');
       tile.className = 'tile';
       tile.setAttribute('role', 'gridcell');
+      tile.dataset.col = c;
       row.appendChild(tile);
     }
     boardEl.appendChild(row);
@@ -140,6 +144,8 @@ function render() {
   if (!state) return;
   document.getElementById('puzzle-no').textContent = `#${state.puzzle}`;
   const rows = boardEl.children;
+  if (cursor === null) cursor = firstEmpty(state.current, len);
+  const editing = state.status === 'playing' ? state.guesses.length : -1;
   for (let r = 0; r < MAX_GUESSES; r++) {
     const tiles = rows[r].children;
     const guess = state.guesses[r];
@@ -147,8 +153,10 @@ function render() {
     const text = guess || (r === state.guesses.length ? state.current : '');
     for (let c = 0; c < len; c++) {
       const tile = tiles[c];
-      tile.textContent = text[c] || '';
-      tile.className = 'tile' + (text[c] ? ' filled' : '') + (marks ? ' ' + marks[c] : '');
+      const ch = text[c] && text[c] !== ' ' ? text[c] : '';
+      tile.textContent = ch;
+      tile.className = 'tile' + (ch ? ' filled' : '') + (marks ? ' ' + marks[c] : '')
+        + (r === editing ? ' editable' : '') + (r === editing && c === cursor ? ' cursor' : '');
     }
   }
   const best = keyboardMarks(state.guesses, state.answer);
@@ -200,28 +208,35 @@ function press(key) {
   if ([pickerEl, statsEl, breakdownEl, skipEl, gotoEl].some((el) => !el.hidden)) return;
   if (busy || state.status !== 'playing') return;
   if (key === 'Enter') return submit();
-  if (key === 'Backspace') {
-    state.current = state.current.slice(0, -1);
-  } else if (/^[A-Z]$/.test(key) && state.current.length < len) {
-    state.current += key;
-  } else {
-    return;
-  }
+  let edit;
+  if (key === 'Backspace') edit = backspace(state.current, cursor, len);
+  else if (/^[A-Z]$/.test(key)) edit = typeLetter(state.current, cursor, key, len);
+  else return;
+  state.current = edit.current;
+  cursor = edit.cursor;
   save();
   render();
-  popTile();
+  if (edit.placed !== undefined) popTile(edit.placed);
 }
 
-function popTile() {
+// Tap a tile in the row being typed to move the cursor there.
+function moveCursor(col) {
+  if ([pickerEl, statsEl, breakdownEl, skipEl, gotoEl].some((el) => !el.hidden)) return;
+  if (busy || state.status !== 'playing') return;
+  cursor = col;
+  render();
+}
+
+function popTile(col) {
   const row = boardEl.children[state.guesses.length];
-  const tile = row && row.children[state.current.length - 1];
+  const tile = row && row.children[col];
   if (!tile) return;
   tile.classList.add('pop');
   setTimeout(() => tile.classList.remove('pop'), 120);
 }
 
 function submit() {
-  if (state.current.length < len) {
+  if (!isComplete(state.current, len)) {
     shakeRow();
     toast(`Need ${len} letters`);
     return;
@@ -235,6 +250,7 @@ function submit() {
   const rowIndex = state.guesses.length;
   state.guesses.push(guess);
   state.current = '';
+  cursor = null;
   if (isWin(guess, state.answer)) state.status = 'won';
   else if (state.guesses.length >= MAX_GUESSES) state.status = 'lost';
   if (state.status !== 'playing') record();
@@ -264,10 +280,23 @@ function revealRow(rowIndex, guess) {
 
 function nextWord() {
   state = dealPuzzle();
+  cursor = null;
   save();
   buildBoard();
   render();
 }
+
+boardEl.addEventListener('click', (e) => {
+  const tile = e.target.closest('.tile');
+  if (tile && tile.parentElement === boardEl.children[state.guesses.length]) moveCursor(Number(tile.dataset.col));
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    if (cursor === null) return;
+    moveCursor(Math.max(0, Math.min(len - 1, cursor + (e.key === 'ArrowLeft' ? -1 : 1))));
+  }
+});
 
 keyboardEl.addEventListener('click', (e) => {
   const key = e.target.closest('.key');
@@ -348,6 +377,7 @@ function goTo(n) {
     saveForLater(profile, state); // the game you leave is kept, not lost
   }
   state = resume(profile, n) || newGame(n);
+  cursor = null;
   save();
   buildBoard();
   render();
