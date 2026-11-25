@@ -1,14 +1,14 @@
-import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwsr985p';
-import { ANSWERS } from './words.js?v=mwsr985p';
-import { ALLOWED } from './allowed.js?v=mwsr985p';
-import { ANSWERS5 } from './words5.js?v=mwsr985p';
-import { ALLOWED5 } from './allowed5.js?v=mwsr985p';
-import { getPlayers, addPlayer, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mwsr985p';
-import { computeStats } from './stats.js?v=mwsr985p';
-import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwsr985p';
-import { nextNumber, saveForLater, resume, saved as savedGames } from './puzzles.js?v=mwsr985p';
-import { firstEmpty, isComplete, typeLetter, backspace } from './edit.js?v=mwsr985p';
-import { setupPWA } from './pwa.js?v=mwsr985p';
+import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwvej6ll';
+import { ANSWERS } from './words.js?v=mwvej6ll';
+import { ALLOWED } from './allowed.js?v=mwvej6ll';
+import { ANSWERS5 } from './words5.js?v=mwvej6ll';
+import { ALLOWED5 } from './allowed5.js?v=mwvej6ll';
+import { getPlayers, addPlayer, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mwvej6ll';
+import { computeStats } from './stats.js?v=mwvej6ll';
+import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwvej6ll';
+import { nextNumber, saveForLater, resume, saved as savedGames } from './puzzles.js?v=mwvej6ll';
+import { firstEmpty, isComplete, typeLetter, backspace } from './edit.js?v=mwvej6ll';
+import { setupPWA } from './pwa.js?v=mwvej6ll';
 
 const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '+ZXCVBNM-']; // + = Enter, - = Back
 const REVEAL_MS = 260; // delay between tiles flipping
@@ -520,4 +520,6 @@ buildKeyboard();
 const saved = getPlayer();
 if (saved) startAs(saved);
 else { buildBoard(); showPicker(); }
+window.worditStarted = true;
+document.getElementById('stuck').hidden = true;
 setupPWA();

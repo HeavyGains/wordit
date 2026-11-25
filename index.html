@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="css/style.css?v=mwsr985p">
+  <link rel="stylesheet" href="css/style.css?v=mwvej6ll">
 </head>
 <body>
   <header class="top">
@@ -113,8 +113,20 @@
     </div>
   </div>
 
+  <div id="stuck" class="stuck" hidden>
+    <p>Still loading. The connection may be slow.</p>
+    <button class="primary-btn" type="button" onclick="location.reload()">Try again</button>
+  </div>
+
   <nav id="keyboard" class="keyboard" aria-label="Keyboard"></nav>
 
-  <script type="module" src="js/app.js?v=mwsr985p"></script>
+  <script>
+    // If the game hasn't started after a few seconds (slow signal or a file
+    // that failed to load), offer a reload instead of a blank screen.
+    setTimeout(function () {
+      if (!window.worditStarted) document.getElementById('stuck').hidden = false;
+    }, 6000);
+  </script>
+  <script type="module" src="js/app.js?v=mwvej6ll"></script>
 </body>
 </html>

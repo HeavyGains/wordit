@@ -1,10 +1,10 @@
 // WORDIT service worker: lets the game open offline and from the home screen.
-// Network first: when online, every file comes fresh from the site, so a new
-// release shows up right away. The cache is only used when there's no signal.
+// The page comes fresh from the site when the network answers quickly, so a
+// new release shows up right away; see the fetch handler for the details.
 // VERSION and ASSETS are rewritten by `npm run bump`; a new VERSION makes
 // phones install this worker again and drop the old cache.
-const VERSION = 'mwsr985p';
-const ASSETS = ["./","index.html","manifest.webmanifest","icons/apple-touch-icon.png","icons/icon-192.png","icons/icon-512.png","css/style.css?v=mwsr985p","js/allowed.js?v=mwsr985p","js/allowed5.js?v=mwsr985p","js/app.js?v=mwsr985p","js/edit.js?v=mwsr985p","js/logic.js?v=mwsr985p","js/puzzles.js?v=mwsr985p","js/pwa.js?v=mwsr985p","js/quality.js?v=mwsr985p","js/stats.js?v=mwsr985p","js/store.js?v=mwsr985p","js/words.js?v=mwsr985p","js/words5.js?v=mwsr985p"];
+const VERSION = 'mwvej6ll';
+const ASSETS = ["./","index.html","manifest.webmanifest","icons/apple-touch-icon.png","icons/icon-192.png","icons/icon-512.png","css/style.css?v=mwvej6ll","js/allowed.js?v=mwvej6ll","js/allowed5.js?v=mwvej6ll","js/app.js?v=mwvej6ll","js/edit.js?v=mwvej6ll","js/logic.js?v=mwvej6ll","js/puzzles.js?v=mwvej6ll","js/pwa.js?v=mwvej6ll","js/quality.js?v=mwvej6ll","js/stats.js?v=mwvej6ll","js/store.js?v=mwvej6ll","js/words.js?v=mwvej6ll","js/words5.js?v=mwvej6ll"];
 const CACHE = `wordit-${VERSION}`;
 
 self.addEventListener('install', (e) => {
@@ -23,19 +23,42 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+// Files with ?v= never change (a release gets a new ?v=), so they come
+// straight from the cache: a slow or stalled connection can't hold up the
+// game. Everything else (the page itself) tries the network first, but gives
+// up after a few seconds and uses the saved copy so the game still opens.
+const NETWORK_WAIT_MS = 3000;
+
+function fromNetwork(req) {
+  return fetch(req, { cache: 'no-cache' }).then((res) => {
+    if (res.ok) {
+      const copy = res.clone();
+      caches.open(CACHE).then((c) => c.put(req, copy));
+    }
+    return res;
+  });
+}
+
+function fromCache(req) {
+  return caches.match(req, { ignoreSearch: req.mode === 'navigate' })
+    .then((hit) => hit || (req.mode === 'navigate' ? caches.match('index.html') : undefined));
+}
+
 self.addEventListener('fetch', (e) => {
   const req = e.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
-  e.respondWith(
-    fetch(req, { cache: 'no-cache' })
-      .then((res) => {
-        if (res.ok) {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
-        }
-        return res;
-      })
-      .catch(() => caches.match(req, { ignoreSearch: req.mode === 'navigate' })
-        .then((hit) => hit || (req.mode === 'navigate' ? caches.match('index.html') : Response.error())))
-  );
+  const url = new URL(req.url);
+  if (req.method !== 'GET' || url.origin !== self.location.origin) return;
+  if (url.searchParams.has('v')) {
+    e.respondWith(caches.match(req).then((hit) => hit || fromNetwork(req)));
+    return;
+  }
+  e.respondWith(new Promise((resolve) => {
+    let done = false;
+    const finish = (res) => { if (!done && res) { done = true; resolve(res); } };
+    // Slow network: use the saved copy if there is one, else keep waiting.
+    const timer = setTimeout(() => fromCache(req).then(finish), NETWORK_WAIT_MS);
+    fromNetwork(req)
+      .then((res) => { clearTimeout(timer); finish(res); })
+      .catch(() => { clearTimeout(timer); fromCache(req).then((hit) => finish(hit || Response.error())); });
+  }));
 });

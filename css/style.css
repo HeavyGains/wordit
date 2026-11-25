@@ -369,3 +369,8 @@ main {
 .breakdown .b-word { letter-spacing: 0.1em; }
 .breakdown .b-skill { color: var(--hit); }
 .breakdown .b-note { color: var(--muted); font-weight: 600; }
+
+/* Shown only if the game hasn't started after a few seconds. */
+.stuck { text-align: center; padding: 32px 16px; color: var(--muted); }
+.stuck[hidden] { display: none; }
+.stuck .primary-btn { margin-top: 12px; }
