@@ -1,14 +1,14 @@
-import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwvfdvot';
-import { ANSWERS } from './words.js?v=mwvfdvot';
-import { ALLOWED } from './allowed.js?v=mwvfdvot';
-import { ANSWERS5 } from './words5.js?v=mwvfdvot';
-import { ALLOWED5 } from './allowed5.js?v=mwvfdvot';
-import { getPlayers, addPlayer, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mwvfdvot';
-import { computeStats } from './stats.js?v=mwvfdvot';
-import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwvfdvot';
-import { nextNumber, saveForLater, resume, saved as savedGames } from './puzzles.js?v=mwvfdvot';
-import { firstEmpty, isComplete, typeLetter, backspace } from './edit.js?v=mwvfdvot';
-import { setupPWA } from './pwa.js?v=mwvfdvot';
+import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwvfuzw2';
+import { ANSWERS } from './words.js?v=mwvfuzw2';
+import { ALLOWED } from './allowed.js?v=mwvfuzw2';
+import { ANSWERS5 } from './words5.js?v=mwvfuzw2';
+import { ALLOWED5 } from './allowed5.js?v=mwvfuzw2';
+import { getPlayers, addPlayer, renamePlayer, removePlayer, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mwvfuzw2';
+import { computeStats } from './stats.js?v=mwvfuzw2';
+import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwvfuzw2';
+import { nextNumber, saveForLater, resume, saved as savedGames } from './puzzles.js?v=mwvfuzw2';
+import { firstEmpty, isComplete, typeLetter, backspace } from './edit.js?v=mwvfuzw2';
+import { setupPWA } from './pwa.js?v=mwvfuzw2';
 
 const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '+ZXCVBNM-']; // + = Enter, - = Back
 const REVEAL_MS = 260; // delay between tiles flipping
@@ -416,25 +416,91 @@ document.getElementById('breakdown-close').addEventListener('click', () => { bre
 
 // ---------- Player picker ----------
 
-function showPicker() {
+let editing = false; // picker shows rename/remove rows
+
+function pickerMsg(text) { document.getElementById('picker-msg').textContent = text; }
+
+function showPicker(edit = false) {
   const players = getPlayers();
+  editing = edit && players.length > 0;
   const list = document.getElementById('picker-list');
   list.innerHTML = '';
-  for (const name of players) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'primary-btn picker-btn' + (name === player ? ' current' : '');
-    b.textContent = name;
-    b.addEventListener('click', () => startAs(name));
-    list.appendChild(b);
-  }
+  for (const name of players) list.appendChild(editing ? editRow(name) : playButton(name));
   list.hidden = !players.length;
-  document.getElementById('picker-title').textContent = players.length ? "Who's playing?" : "What's your name?";
+  document.getElementById('picker-title').textContent =
+    editing ? 'Edit players' : players.length ? "Who's playing?" : "What's your name?";
+  document.getElementById('name-form').hidden = editing;
   document.getElementById('name-input').placeholder = players.length ? 'New player' : 'Your name';
   document.getElementById('name-input').value = '';
-  document.getElementById('picker-close').hidden = !player;
+  const editBtn = document.getElementById('picker-edit');
+  editBtn.hidden = !players.length;
+  editBtn.textContent = editing ? 'Done' : 'Edit players';
+  document.getElementById('picker-close').hidden = !player || editing;
+  pickerMsg('');
   pickerEl.hidden = false;
   if (!players.length) document.getElementById('name-input').focus();
+}
+
+function playButton(name) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'primary-btn picker-btn' + (name === player ? ' current' : '');
+  b.textContent = name;
+  b.addEventListener('click', () => startAs(name));
+  return b;
+}
+
+// One row per player in edit mode: name box + Save + Remove (tap twice).
+function editRow(name) {
+  const row = document.createElement('form');
+  row.className = 'edit-row';
+  row.autocomplete = 'off';
+  const input = document.createElement('input');
+  input.className = 'goto-input name-input';
+  input.type = 'text';
+  input.maxLength = 16;
+  input.value = name;
+  input.setAttribute('aria-label', `Rename ${name}`);
+  input.setAttribute('autocapitalize', 'words');
+  input.spellcheck = false;
+  const save = document.createElement('button');
+  save.type = 'submit';
+  save.className = 'icon-btn';
+  save.textContent = 'Save';
+  const del = document.createElement('button');
+  del.type = 'button';
+  del.className = 'icon-btn remove-btn';
+  del.textContent = 'Remove';
+  del.setAttribute('aria-label', `Remove ${name}`);
+  row.append(input, save, del);
+
+  row.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const r = renamePlayer(name, input.value);
+    if (r.error) { pickerMsg(r.error); input.focus(); return; }
+    if (player === name) {
+      player = r.name;
+      document.getElementById('player-btn').textContent = r.name;
+    }
+    showPicker(true);
+    if (r.name !== name) pickerMsg(`Renamed to ${r.name}`);
+  });
+  del.addEventListener('click', () => {
+    if (!del.classList.contains('sure')) {
+      del.classList.add('sure');
+      del.textContent = 'Sure?';
+      pickerMsg(`Tap Sure? to delete ${name}'s puzzles and stats on this phone.`);
+      return;
+    }
+    removePlayer(name);
+    if (player === name) {
+      player = null;
+      document.getElementById('player-btn').textContent = '';
+    }
+    showPicker(true);
+    pickerMsg(`Removed ${name}`);
+  });
+  return row;
 }
 
 document.getElementById('name-form').addEventListener('submit', (e) => {
@@ -445,6 +511,7 @@ document.getElementById('name-form').addEventListener('submit', (e) => {
   input.blur();
   startAs(name);
 });
+document.getElementById('picker-edit').addEventListener('click', () => showPicker(!editing));
 document.getElementById('picker-close').addEventListener('click', () => { pickerEl.hidden = true; });
 
 document.getElementById('mode-btn').addEventListener('click', () => {

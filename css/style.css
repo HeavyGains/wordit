@@ -320,10 +320,16 @@ main {
 .picker-list { display: flex; flex-direction: column; gap: 12px; align-items: center; }
 .picker-btn.current { outline: 3px solid var(--text); outline-offset: 2px; }
 .picker-btn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.picker-list[hidden], .picker-close[hidden] { display: none; }
+.picker-list[hidden], .picker-foot [hidden], .name-row[hidden] { display: none; }
+.picker-foot { display: flex; gap: 10px; justify-content: center; margin-top: 14px; }
+.picker-msg { color: var(--near); }
+.picker-msg:empty { display: none; }
+.edit-row { display: flex; gap: 8px; width: 100%; }
+.edit-row .name-input { flex: 1; min-width: 0; }
+.edit-row .icon-btn { padding: 10px 12px; white-space: nowrap; }
+.edit-row .remove-btn.sure { background: #c4404f; border-color: #c4404f; color: #fff; }
 .name-row { margin: 16px auto 0; }
 .name-input { font-size: 20px; padding: 10px 12px; text-align: left; }
-.picker-close { margin-top: 14px; }
 
 .stats-nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 4px; }
 .stat { display: flex; flex-direction: column; align-items: center; }
