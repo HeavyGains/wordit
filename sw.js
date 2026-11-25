@@ -3,8 +3,8 @@
 // new release shows up right away; see the fetch handler for the details.
 // VERSION and ASSETS are rewritten by `npm run bump`; a new VERSION makes
 // phones install this worker again and drop the old cache.
-const VERSION = 'mwvfdvot';
-const ASSETS = ["./","index.html","manifest.webmanifest","icons/apple-touch-icon.png","icons/icon-192.png","icons/icon-512.png","css/style.css?v=mwvfdvot","js/allowed.js?v=mwvfdvot","js/allowed5.js?v=mwvfdvot","js/app.js?v=mwvfdvot","js/edit.js?v=mwvfdvot","js/logic.js?v=mwvfdvot","js/puzzles.js?v=mwvfdvot","js/pwa.js?v=mwvfdvot","js/quality.js?v=mwvfdvot","js/stats.js?v=mwvfdvot","js/store.js?v=mwvfdvot","js/words.js?v=mwvfdvot","js/words5.js?v=mwvfdvot"];
+const VERSION = 'mwvfuzw2';
+const ASSETS = ["./","index.html","manifest.webmanifest","icons/apple-touch-icon.png","icons/icon-192.png","icons/icon-512.png","css/style.css?v=mwvfuzw2","js/allowed.js?v=mwvfuzw2","js/allowed5.js?v=mwvfuzw2","js/app.js?v=mwvfuzw2","js/edit.js?v=mwvfuzw2","js/logic.js?v=mwvfuzw2","js/puzzles.js?v=mwvfuzw2","js/pwa.js?v=mwvfuzw2","js/quality.js?v=mwvfuzw2","js/stats.js?v=mwvfuzw2","js/store.js?v=mwvfuzw2","js/words.js?v=mwvfuzw2","js/words5.js?v=mwvfuzw2"];
 const CACHE = `wordit-${VERSION}`;
 
 self.addEventListener('install', (e) => {

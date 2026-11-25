@@ -67,8 +67,41 @@ export function addPlayer(raw) {
   const existing = findName(list, name);
   if (existing) return existing;
   list.push(name);
-  set(PLAYERS_KEY, JSON.stringify(list));
+  savePlayers(list);
   return name;
+}
+
+function savePlayers(list) {
+  set(PLAYERS_KEY, JSON.stringify(list));
+}
+
+// Move a player's saves to a new name. Returns { name } on success or
+// { error } if the new name is empty or already taken by someone else.
+export function renamePlayer(oldName, raw) {
+  const name = cleanName(raw);
+  if (!name) return { error: 'Type a name' };
+  const list = getPlayers();
+  const i = list.indexOf(oldName);
+  if (i < 0) return { error: 'Player not found' };
+  const other = findName(list.filter((n) => n !== oldName), name);
+  if (other) return { error: `${other} is already a player` };
+  if (name === oldName) return { name };
+  for (const key of [...LENGTHS.map((l) => [profileKey(oldName, l), profileKey(name, l)]), [modeKey(oldName), modeKey(name)]]) {
+    const v = get(key[0]);
+    if (v !== null) { set(key[1], v); remove(key[0]); }
+  }
+  list[i] = name;
+  savePlayers(list);
+  if (get(PLAYER_KEY) === oldName) set(PLAYER_KEY, name);
+  return { name };
+}
+
+// Delete a player and all their puzzles and stats on this phone.
+export function removePlayer(name) {
+  for (const l of LENGTHS) remove(profileKey(name, l));
+  remove(modeKey(name));
+  savePlayers(getPlayers().filter((n) => n !== name));
+  if (get(PLAYER_KEY) === name) remove(PLAYER_KEY);
 }
 
 export function getPlayer() {

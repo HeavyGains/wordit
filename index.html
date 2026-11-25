@@ -27,7 +27,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="css/style.css?v=mwvfdvot">
+  <link rel="stylesheet" href="css/style.css?v=mwvfuzw2">
 </head>
 <body>
   <header class="top">
@@ -71,8 +71,12 @@
           placeholder="Your name" aria-label="Your name">
         <button id="name-go" class="primary-btn" type="submit">Play</button>
       </form>
+      <p id="picker-msg" class="hint picker-msg" role="status"></p>
       <p class="hint">Each player keeps their own puzzles and stats on this phone.</p>
-      <button id="picker-close" class="icon-btn picker-close" type="button">Close</button>
+      <div class="picker-foot">
+        <button id="picker-edit" class="icon-btn" type="button">Edit players</button>
+        <button id="picker-close" class="icon-btn" type="button">Close</button>
+      </div>
     </div>
   </div>
 
@@ -142,6 +146,6 @@
       if (!window.worditStarted) document.getElementById('stuck').hidden = false;
     }, 6000);
   </script>
-  <script type="module" src="js/app.js?v=mwvfdvot"></script>
+  <script type="module" src="js/app.js?v=mwvfuzw2"></script>
 </body>
 </html>
