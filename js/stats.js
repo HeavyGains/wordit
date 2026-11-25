@@ -1,6 +1,6 @@
 // Pure stats from a player's finished games. Each game:
 //   { puzzle, answer, guesses: [...], won: bool, skipped?: bool, at: ms }
-import { MAX_GUESSES } from './logic.js?v=mwvej6ll';
+import { MAX_GUESSES } from './logic.js?v=mwvfdvot';
 
 export function computeStats(history) {
   const dist = Array(MAX_GUESSES).fill(0); // dist[0] = wins in 1 guess

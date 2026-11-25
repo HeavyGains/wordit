@@ -9,10 +9,25 @@
   <meta name="apple-mobile-web-app-title" content="WORDIT">
   <meta name="mobile-web-app-capable" content="yes">
   <title>WORDIT</title>
+  <script>
+    // Phones sometimes report the wrong screen height to CSS (100dvh) after
+    // the browser's address bar shows or hides, which pushed the bottom of
+    // the game off screen. Measure the real visible height instead.
+    (function () {
+      function fit() {
+        document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px');
+      }
+      fit();
+      window.addEventListener('resize', fit);
+      window.addEventListener('pageshow', fit);
+      document.addEventListener('visibilitychange', fit);
+      if (window.visualViewport) window.visualViewport.addEventListener('resize', fit);
+    })();
+  </script>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="css/style.css?v=mwvej6ll">
+  <link rel="stylesheet" href="css/style.css?v=mwvfdvot">
 </head>
 <body>
   <header class="top">
@@ -127,6 +142,6 @@
       if (!window.worditStarted) document.getElementById('stuck').hidden = false;
     }, 6000);
   </script>
-  <script type="module" src="js/app.js?v=mwvej6ll"></script>
+  <script type="module" src="js/app.js?v=mwvfdvot"></script>
 </body>
 </html>

@@ -1,14 +1,14 @@
-import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwvej6ll';
-import { ANSWERS } from './words.js?v=mwvej6ll';
-import { ALLOWED } from './allowed.js?v=mwvej6ll';
-import { ANSWERS5 } from './words5.js?v=mwvej6ll';
-import { ALLOWED5 } from './allowed5.js?v=mwvej6ll';
-import { getPlayers, addPlayer, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mwvej6ll';
-import { computeStats } from './stats.js?v=mwvej6ll';
-import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwvej6ll';
-import { nextNumber, saveForLater, resume, saved as savedGames } from './puzzles.js?v=mwvej6ll';
-import { firstEmpty, isComplete, typeLetter, backspace } from './edit.js?v=mwvej6ll';
-import { setupPWA } from './pwa.js?v=mwvej6ll';
+import { MAX_GUESSES, scoreGuess, keyboardMarks, isWin, answerFor } from './logic.js?v=mwvfdvot';
+import { ANSWERS } from './words.js?v=mwvfdvot';
+import { ALLOWED } from './allowed.js?v=mwvfdvot';
+import { ANSWERS5 } from './words5.js?v=mwvfdvot';
+import { ALLOWED5 } from './allowed5.js?v=mwvfdvot';
+import { getPlayers, addPlayer, getPlayer, setPlayer, getLength, setLength, loadProfile, saveProfile } from './store.js?v=mwvfdvot';
+import { computeStats } from './stats.js?v=mwvfdvot';
+import { analyzeGame, gameSkill, qualityStats } from './quality.js?v=mwvfdvot';
+import { nextNumber, saveForLater, resume, saved as savedGames } from './puzzles.js?v=mwvfdvot';
+import { firstEmpty, isComplete, typeLetter, backspace } from './edit.js?v=mwvfdvot';
+import { setupPWA } from './pwa.js?v=mwvfdvot';
 
 const ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '+ZXCVBNM-']; // + = Enter, - = Back
 const REVEAL_MS = 260; // delay between tiles flipping
